@@ -1,0 +1,68 @@
+import cv2
+from pyzbar import pyzbar
+import os
+
+used_tickets = set()
+
+def scan_and_validate_ticket(ticket_image):
+    qr_codes = pyzbar.decode(ticket_image)
+
+    if qr_codes:
+        ticket_identifier = qr_codes[0].data.decode("utf-8")
+        if ticket_identifier in qr_codes_list:
+            if ticket_identifier not in used_tickets:
+                used_tickets.add(ticket_identifier)
+                return True  # Valid ticket
+        return False  # Invalid ticket or already used
+    return False  # No QR code found on the ticket
+
+# Load existing QR codes from a directory
+qr_codes_directory = r"E:\Programming\pythonProject\QRCodeProject\Images" # images path
+qr_codes_list = []
+
+for file_name in os.listdir(qr_codes_directory):
+    if file_name.endswith(".png"):
+        qr_code_path = os.path.join(qr_codes_directory, file_name)
+        qr_codes_list.append(file_name[:-4])  # Remove the file extension and store the identifier
+
+# Initialize the camera capture
+cap = cv2.VideoCapture(0)  # Use the default camera (index 0)
+
+while True:
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+
+    # Display the frame
+    cv2.imshow("Ticket Scanner", frame)
+
+    # Wait for key press
+    key = cv2.waitKey(1) & 0xFF
+
+    # Check if 'q' key is pressed to quit the program
+    if key == ord("q"):
+        break
+
+    # Process the frame for QR code scanning
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    qr_codes = pyzbar.decode(gray)
+
+    if qr_codes:
+        # Get the first detected QR code
+        qr_code = qr_codes[0]
+
+        # Extract the bounding box coordinates
+        x, y, w, h = qr_code.rect
+
+        # Extract the QR code region from the frame
+        qr_code_image = gray[y:y + h, x:x + w]
+
+        # Scan and validate the ticket
+        is_valid_ticket = scan_and_validate_ticket(qr_code_image)
+        if is_valid_ticket:
+            print("Ticket is valid!")
+        else:
+            print("Ticket is invalid!")
+
+# Release the camera capture and close any open windows
+cap.release()
+cv2.destroyAllWindows()
