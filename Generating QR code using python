@@ -1,0 +1,32 @@
+import qrcode
+import os
+import uuid
+
+def generate_unique_identifiers(num_tickets):
+    return [str(uuid.uuid4()) for _ in range(num_tickets)]
+
+def generate_qr_codes(unique_identifiers, output_directory):
+    for identifier in unique_identifiers:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(identifier)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        image_path = os.path.join(output_directory, f"{identifier}.png")
+        qr_img.save(image_path)  # Save the QR code image with the unique identifier as the filename
+        yield image_path
+
+# Generate unique identifiers
+num_tickets = 140  # Specify the number of tickets
+unique_identifiers = generate_unique_identifiers(num_tickets)
+
+# Specify the output directory for saving the QR code images
+output_directory = r"E:\Programming\pythonProject\QRCodeProject\Images" # location that the images will be generated in
+
+# Generate QR codes and save them to the directory
+for ticket_image_path in generate_qr_codes(unique_identifiers, output_directory):
+    print(f"Generated ticket: {ticket_image_path}")
